@@ -12,6 +12,14 @@ let THEME0_BG_COLOR = UIColor(red: 74/255, green: 112/255, blue: 139/255, alpha:
 //135,206,235
 let BTN_TIN_COLOR = UIColor(red: 135/255, green: 206/255, blue: 235/255, alpha: 1)
 
+let LOGO_0_COLOR = UIColor(red: 100/255, green: 149/255, blue: 237/255, alpha: 1)//100,149,237
+let LOGO_1_COLOR = UIColor(red: 175/255, green: 238/255, blue: 238/255, alpha: 1)//175,238,238
+let LOGO_2_COLOR = UIColor(red: 0/255, green: 139/255, blue: 139/255, alpha: 1)//0,139,139
+let LOGO_3_COLOR = UIColor(red: 128/255, green: 128/255, blue: 0/255, alpha: 1)//128,128,0
+let LOGO_4_COLOR = UIColor(red: 255/255, green: 222/255, blue: 173/255, alpha: 1)//255,222,173
+let LOGO_5_COLOR = UIColor(red: 240/255, green: 128/255, blue: 128/255, alpha: 1)//240,128,128
+
+
 //输入文字颜色
 let SHOWINPUT_COLOR = UIColor.white
 //计算结果文字颜色
@@ -37,6 +45,9 @@ let HEIGHT_SCREEN = UIScreen.main.bounds.height
     @objc optional func changeShowSymbolText(textStr:String)
     @objc optional func changeShowSymbolTextOfOnclickEqual()
     @objc optional func tellNew(str:String)
+    @objc optional func tellResultTextEmpty()
+    @objc optional func changeLOGOColor(k:Int)
+
 }
 
 class PrefixTool: NSObject {
@@ -162,6 +173,7 @@ class PrefixTool: NSObject {
     //是否重复点击运算符号
     var isOnclickNumber:Bool = false
     
+    private var k:Int = 0
     @objc func onclick(btn:UIButton){
 
         let number1:String = "1"
@@ -181,17 +193,26 @@ class PrefixTool: NSObject {
         let symbolDivide:String = "➗"
 
 
+        
         switch btn.tag {
         case 10://我的
             //跳转我的页面
-            print("我的按钮")
+            print("改变LOGO颜色")
+            delegate?.changeLOGOColor?(k:k)
+            if k > 5{
+                k = 0
+            }else{
+                k += 1
+            }
             
         case 11://全删除
             print("全删除按钮")
             initAllProperty()
+            delegate?.tellResultTextEmpty?()
+            
         case 12://部分删除
             print("部分删除按钮")
-            
+            delegateItem()
         case 13://单个删除
             print("单个删除按钮")
             delegateCharacter()
@@ -273,7 +294,7 @@ class PrefixTool: NSObject {
     let arrNum:Array<Int> = [20,21,22,30,31,32,40,41,42,50,51]//数字
     let arrSym:Array<Int> = [23,33,43,53]//运算符号
     let arrEquar:Array<Int> = [52] //运算符号等于号
-
+    var iC:Int = 0
     private func getValue(btn:UIButton, currentValue:String){
 
         let btnTag:Int = btn.tag
@@ -300,6 +321,7 @@ class PrefixTool: NSObject {
             
             isOnclickSymbol = false
             isOnclickEqual = false
+            iC = 0
         }else if arrSym.contains(btnTag){
             
             if !numberOfChars.isEmpty{
@@ -321,10 +343,10 @@ class PrefixTool: NSObject {
             isOnclickEqual = false
             isOnclickEqualNoOnclickSymbol = false
             isOnclickNumber = false
+            iC = 0
         }else if arrEquar.contains(btnTag){
              delegate?.changeShowSymbolTextOfOnclickEqual?()
-            
-            
+    
              if !numberOfChars.isEmpty && isOnclickEqualNoOnclickSymbol == false{
                 //不为空的数值保存
                 if numberOfChars.last == "."{
@@ -333,6 +355,7 @@ class PrefixTool: NSObject {
                 }else{
                     arrNumber.append(numberOfChars)
                 }
+                
             }
             //计算
             if isOnclickSymbol == false &&  isOnclickEqual == false && isOnclickEqualNoOnclickSymbol == false{
@@ -348,6 +371,18 @@ class PrefixTool: NSObject {
             isOnclickEqual = true
             isOnclickEqualNoOnclickSymbol = true
             isOnclickNumber = false
+            
+            if iC >= 1{//重复按等于号实现最后一个数连续相同的模式进行运算：如 3+1=3 再按=+1。+1。+1。+1如此反复。4*2=8，*2. *2. *2...
+                if arrNumber.count > 0 && arrSymbol.count > 0{
+                    numberOfChars = arrNumber.last!
+                    symbolOfCurrentSate = arrSymbol.last!
+                    arrNumber.append(numberOfChars)
+                    arrSymbol.append(symbolOfCurrentSate)
+                    reckoning()
+                }
+             
+            }
+            iC += 1
         }
         
         print("numberOfChars:\(numberOfChars)===symbolOfCurrentSate\(symbolOfCurrentSate)===arrNumber\(arrNumber)===arrSymbol\(arrSymbol)")
@@ -469,7 +504,7 @@ class PrefixTool: NSObject {
         }
     }
     private func delegateItem(){//删除单个数
-        
+        numberOfChars = ""
     }
     private func delegateAll(){//删除全部计算
         
@@ -499,7 +534,7 @@ class PrefixTool: NSObject {
 
         var str:String = string
         
-        if stringToDouble(str).truncatingRemainder(dividingBy: 2) == 0{
+        if stringToDouble(str).truncatingRemainder(dividingBy: 1) == 0{
             if !str.isEmpty{
                 str.remove(at: str.index(before: str.endIndex))
             }

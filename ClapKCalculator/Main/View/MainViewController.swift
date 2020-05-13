@@ -9,7 +9,32 @@
 import UIKit
 
 class MainViewController: UIViewController, Deleagte {
+    
     //MARK - PrefixTool的代理协议
+    func changeLOGOColor(k:Int) {
+        switch k {
+        case 0:
+            logoText.textColor = LOGO_0_COLOR
+        case 1:
+            logoText.textColor = LOGO_1_COLOR
+        case 2:
+            logoText.textColor = LOGO_2_COLOR
+        case 3:
+            logoText.textColor = LOGO_3_COLOR
+        case 4:
+            logoText.textColor = LOGO_4_COLOR
+        case 5:
+            logoText.textColor = LOGO_5_COLOR
+        default:
+            logoText.textColor = .gray
+        }
+    }
+    
+    func tellResultTextEmpty() {
+        labResult.text = ""
+        labSymbolNews.text = ""
+    }
+    
     func changeShowSymbolText(textStr: String) {
         let arr = ["➕","➖","✖️","➗"]
         if arr.contains(textStr){
@@ -75,13 +100,13 @@ class MainViewController: UIViewController, Deleagte {
         labResult.font = UIFont.boldSystemFont(ofSize: 40)
         return labResult
     }()
-    lazy var inputText:UILabel = {
-           let inputText = UILabel.init(frame: CGRect(x: 0, y: 10, width: WIDTH_SCREEN, height: 40))
-           inputText.textAlignment = .center
-           inputText.textColor = .gray
-           inputText.text = "ClapK Calculator"
-           inputText.font = UIFont.boldSystemFont(ofSize: 30)
-           return inputText
+    lazy var logoText:UILabel = {
+           let logoText = UILabel.init(frame: CGRect(x: 0, y: 10, width: WIDTH_SCREEN, height: 40))
+           logoText.textAlignment = .center
+           logoText.textColor = LOGO_1_COLOR
+           logoText.text = "ClapK Calculator"
+           logoText.font = UIFont.boldSystemFont(ofSize: 30)
+           return logoText
        }()
     lazy var newsText:UILabel = {
         let newsText = UILabel.init(frame: CGRect(x: 0, y: -18, width: WIDTH_SCREEN, height: 40))
@@ -117,7 +142,7 @@ class MainViewController: UIViewController, Deleagte {
 
         self.view.addSubview(labResult)
         
-        dataBG.addSubview(inputText)
+        dataBG.addSubview(logoText)
          dataBG.addSubview(newsText)
         //创建历史信息模块
         
