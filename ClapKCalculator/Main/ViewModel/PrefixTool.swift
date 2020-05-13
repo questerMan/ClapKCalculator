@@ -63,6 +63,7 @@ class PrefixTool: NSObject {
             let newValue:Double = change?[.newKey] as! Double
             print("新的ResultText属性的值为: \(newValue)")
             delegate?.changeResultText?(textStr: doubleToString(newValue))
+           
         }else if keyPath == "numberOfChars" {
             let newValue:String = change?[.newKey] as! String
             print("新的name属性的值为: \(newValue)")
@@ -158,7 +159,9 @@ class PrefixTool: NSObject {
     var isOnclickEqual:Bool = false
     //
     var isOnclickEqualNoOnclickSymbol:Bool = false
-
+    //是否重复点击运算符号
+    var isOnclickNumber:Bool = false
+    
     @objc func onclick(btn:UIButton){
 
         let number1:String = "1"
@@ -275,6 +278,11 @@ class PrefixTool: NSObject {
 
         let btnTag:Int = btn.tag
         if arrNum.contains(btnTag) {
+            isOnclickNumber = true
+            if isOnclickEqualNoOnclickSymbol == true{
+                initAllProperty()
+            }
+            
             if !symbolOfCurrentSate.isEmpty{
                 //不为空的数值保存
                 arrSymbol.append(symbolOfCurrentSate)
@@ -293,6 +301,7 @@ class PrefixTool: NSObject {
             isOnclickSymbol = false
             isOnclickEqual = false
         }else if arrSym.contains(btnTag){
+            
             if !numberOfChars.isEmpty{
                 //不为空的数值保存
                 if numberOfChars.last == "."{
@@ -311,6 +320,7 @@ class PrefixTool: NSObject {
             isOnclickSymbol = true
             isOnclickEqual = false
             isOnclickEqualNoOnclickSymbol = false
+            isOnclickNumber = false
         }else if arrEquar.contains(btnTag){
              delegate?.changeShowSymbolTextOfOnclickEqual?()
             
@@ -337,6 +347,7 @@ class PrefixTool: NSObject {
             isOnclickSymbol = false
             isOnclickEqual = true
             isOnclickEqualNoOnclickSymbol = true
+            isOnclickNumber = false
         }
         
         print("numberOfChars:\(numberOfChars)===symbolOfCurrentSate\(symbolOfCurrentSate)===arrNumber\(arrNumber)===arrSymbol\(arrSymbol)")
@@ -410,25 +421,30 @@ class PrefixTool: NSObject {
         isOnclickEqualNoOnclickSymbol = false
         isOnclickEqual = false
         isOnclickSymbol = false
+        isOnclickNumber = false
     }
     
     //MARK - 运算符号算法
     private func add(num1:Double,num2:Double) -> Double{//加
-        let result:Double = num1 + num2
-        return result
+        let resultF:Double = num1 + num2
+        
+        return resultF
     }
     private func subtract(num1:Double,num2:Double) -> Double{//减
-        let result:Double = num1 - num2
-        return result
+        let resultF:Double = num1 - num2
+        return resultF
     }
     private func multiply(num1:Double,num2:Double) -> Double{//乘
-        let result:Double = num1 * num2
-        return result
+        let resultF:Double = num1 * num2
+        
+        return resultF
     }
     private func divide(num1:Double,num2:Double) -> Double{//除
-        let result:String = String(format:"%.2f",num1/num2)
-        return stringToDouble(result)
+        let resultF:String = String(format:"%.2f",num1/num2)
+        
+        return stringToDouble(resultF)
     }
+    
     
     private func searchSymbolWay(stateStr:String,num1:Double,num2:Double) -> Double{
          
@@ -479,6 +495,27 @@ class PrefixTool: NSObject {
         UIGraphicsEndImageContext()
         return image
     }
+    func removePiontCount(string:String) -> String{
+
+        var str:String = string
+        
+        if stringToDouble(str).truncatingRemainder(dividingBy: 2) == 0{
+            if !str.isEmpty{
+                str.remove(at: str.index(before: str.endIndex))
+            }
+            if !str.isEmpty{
+                str.remove(at: str.index(before: str.endIndex))
+            }
+            if !str.isEmpty{
+                str.remove(at: str.index(before: str.endIndex))
+            }
+            return str
+        }else{
+            return string
+        }
+        
+    }
+    
     
      deinit {
         //移除监听

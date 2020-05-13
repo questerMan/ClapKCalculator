@@ -34,9 +34,9 @@ class MainViewController: UIViewController, Deleagte {
     }
     func changeResultText(textStr: String) {
         if  tool.stringToDouble(textStr) == 0{
-            labResult.text = ""
+            labResult.text = "0"
         }else{
-            labResult.text = "= " + textStr
+            labResult.text = "= " + tool.removePiontCount(string:textStr)
         }
     }
     
@@ -125,7 +125,7 @@ class MainViewController: UIViewController, Deleagte {
         tool.creatCheckButton(superView: self,topY:HEIGHT_SCREEN/12*5)
                 
         
-     
+
     }
 
     /*
