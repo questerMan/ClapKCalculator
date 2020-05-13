@@ -10,13 +10,38 @@ import UIKit
 
 class MainViewController: UIViewController, Deleagte {
     //MARK - PrefixTool的代理协议
-
-    func changeResultText(textStr: String) {
-        labResult.text = "= " + textStr
+    func changeShowSymbolText(textStr: String) {
+        let arr = ["➕","➖","✖️","➗"]
+        if arr.contains(textStr){
+            labSymbolNews.text = textStr
+        }else{
+            
+        }
     }
     
-    func changeShowText(textStr: String) {
-        labNews.text = textStr
+    func tellNew(str: String) {
+        weak var WeakSelf = self
+        newsText.text = str
+        ///延迟执行之前的代码
+         DispatchQueue.main.asyncAfter(deadline: .now() + 2, execute:{
+             ///延迟执行的代码
+            WeakSelf?.newsText.text = ""
+        })
+    }
+
+    func changeShowSymbolTextOfOnclickEqual() {
+        labSymbolNews.text = ""
+    }
+    func changeResultText(textStr: String) {
+        if  tool.stringToDouble(textStr) == 0{
+            labResult.text = ""
+        }else{
+            labResult.text = "= " + textStr
+        }
+    }
+    
+    func changeShowCharsText(textStr: String) {
+        labCharsNews.text = textStr
     }
     
     //MARK - 懒加载
@@ -25,18 +50,27 @@ class MainViewController: UIViewController, Deleagte {
         tool.delegate = self
         return tool
     }()
-    lazy var labNews:UILabel = {
-        let labNews = UILabel.init(frame: CGRect(x: 0, y: 30, width: WIDTH_SCREEN, height: 40))
-        labNews.textAlignment = .right
-        labNews.textColor = BTN_TIN_COLOR
-        labNews.numberOfLines = 2
-        labNews.font = UIFont.boldSystemFont(ofSize: 30)
-        labNews.contentMode = .scaleAspectFill
-        return labNews
+    lazy var labSymbolNews:UILabel = {
+        let labSymbolNews = UILabel.init(frame: CGRect(x: WIDTH_SCREEN - 100, y: 80, width: 50, height: 40))
+        labSymbolNews.textAlignment = .right
+        labSymbolNews.textColor = BTN_TIN_COLOR
+        labSymbolNews.numberOfLines = 2
+        labSymbolNews.font = UIFont.boldSystemFont(ofSize: 30)
+        labSymbolNews.contentMode = .scaleAspectFill
+        return labSymbolNews
+    }()
+    lazy var labCharsNews:UILabel = {
+        let labCharsNews = UILabel.init(frame: CGRect(x: 50, y: 30, width: WIDTH_SCREEN - 100, height: 40))
+        labCharsNews.textAlignment = .center
+        labCharsNews.textColor = BTN_TIN_COLOR
+        labCharsNews.numberOfLines = 2
+        labCharsNews.font = UIFont.boldSystemFont(ofSize: 30)
+        labCharsNews.contentMode = .scaleAspectFill
+        return labCharsNews
     }()
     lazy var labResult:UILabel = {
         let labResult = UILabel.init(frame: CGRect(x: 0, y: 70, width: WIDTH_SCREEN, height: 60))
-        labResult.textAlignment = .right
+        labResult.textAlignment = .center
         labResult.textColor = .white
         labResult.font = UIFont.boldSystemFont(ofSize: 40)
         return labResult
@@ -49,6 +83,14 @@ class MainViewController: UIViewController, Deleagte {
            inputText.font = UIFont.boldSystemFont(ofSize: 30)
            return inputText
        }()
+    lazy var newsText:UILabel = {
+        let newsText = UILabel.init(frame: CGRect(x: 0, y: -18, width: WIDTH_SCREEN, height: 40))
+        newsText.textAlignment = .center
+        newsText.textColor = .white
+        newsText.text = "dadadasdad"
+        newsText.font = UIFont.boldSystemFont(ofSize: 15)
+        return newsText
+    }()
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -70,20 +112,20 @@ class MainViewController: UIViewController, Deleagte {
         
         //创建显示模块 输入信息和结果
         
-        self.view.addSubview(labNews)
-        
+        self.view.addSubview(labCharsNews)
+        self.view.addSubview(labSymbolNews)
+
         self.view.addSubview(labResult)
         
         dataBG.addSubview(inputText)
-        
+         dataBG.addSubview(newsText)
         //创建历史信息模块
         
         //创建功能键模块
         tool.creatCheckButton(superView: self,topY:HEIGHT_SCREEN/12*5)
                 
         
-        
-        
+     
     }
 
     /*

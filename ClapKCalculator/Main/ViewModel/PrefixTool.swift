@@ -32,8 +32,11 @@ let HEIGHT_SCREEN = UIScreen.main.bounds.height
 
 @objc protocol Deleagte:class {
 
-    @objc optional func changeShowText(textStr:String)
+    @objc optional func changeShowCharsText(textStr:String)
     @objc optional func changeResultText(textStr:String)
+    @objc optional func changeShowSymbolText(textStr:String)
+    @objc optional func changeShowSymbolTextOfOnclickEqual()
+    @objc optional func tellNew(str:String)
 }
 
 class PrefixTool: NSObject {
@@ -42,25 +45,28 @@ class PrefixTool: NSObject {
         super.init()
     
         // 添加观察者
-        self.addObserver(self, forKeyPath: "symbolState", options: [.new,.old], context: nil)
-        self.addObserver(self, forKeyPath: "chars", options: [.new,.old], context: nil)
-        self.addObserver(self, forKeyPath: "resultFinish", options: [.new,.old], context: nil)
+        self.addObserver(self, forKeyPath: "symbolOfCurrentSate", options: [.new,.old], context: nil)
+        self.addObserver(self, forKeyPath: "result", options: [.new,.old], context: nil)
+        self.addObserver(self, forKeyPath: "numberOfChars", options: [.new,.old], context: nil)
 
     }
     /// KVO监听属性
     override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
-        if let newName = change?[.newKey] as? String{
-            //let newstr =  change?[.newKey] as? String
-            //let oldtr =  change?[.oldKey] as? String
-            
-            print("新的name属性的值为: \(newName)")
-            if keyPath == "symbolState" {
-                changeOnclickSelecteSate(symbolState)
-            }else if keyPath == "chars" {
-                delegate?.changeShowText?(textStr: chars)
-            }else if keyPath == "resultFinish" {
-                delegate?.changeResultText?(textStr: resultFinish)
-            }
+        if keyPath == "symbolOfCurrentSate" {
+        
+            let newValue:String = change?[.newKey] as! String
+            print("新的name属性的值为: \(newValue)")
+            changeOnclickSelecteSateForBGColor(newValue)
+            delegate?.changeShowSymbolText?(textStr: newValue)
+        
+        }else if keyPath == "result" {
+            let newValue:Double = change?[.newKey] as! Double
+            print("新的ResultText属性的值为: \(newValue)")
+            delegate?.changeResultText?(textStr: doubleToString(newValue))
+        }else if keyPath == "numberOfChars" {
+            let newValue:String = change?[.newKey] as! String
+            print("新的name属性的值为: \(newValue)")
+            delegate?.changeShowCharsText?(textStr: newValue)
         }
     }
 
@@ -68,6 +74,7 @@ class PrefixTool: NSObject {
     var subtractBtn:UIButton?
     var multiplyBtn:UIButton?
     var divideBtn:UIButton?
+    var equalBtn:UIButton?
 
     weak var delegate:Deleagte?
     
@@ -110,6 +117,8 @@ class PrefixTool: NSObject {
                     addBtn = btn
                 case 53:
                     subtractBtn = btn
+                case 52:
+                    equalBtn = btn
                 default:
                     break
                 }
@@ -118,47 +127,40 @@ class PrefixTool: NSObject {
     }
     
     //字符串转换成浮点型Double
-    private func stringToDouble(_ str:String) -> Double{
+    func stringToDouble(_ str:String) -> Double{
         return Double((str as NSString).doubleValue)
     }
     
     //浮点型Double转换成字符串
-    private func doubleToString(_ number:Double) -> String{
+    func doubleToString(_ number:Double) -> String{
         return String(format: "%.2f", number)
     }
-    
-    //运算符号的使用状态
-    enum SymbolState:Int {
-        case none = 0
-        case add = 1
-        case subtract = 2
-        case multiply = 3
-        case divide = 4
-    }
-    
-    private func gethars(_ str:String){
-        if isEqualOnclickSymbol == false{
-            chars += str
-        }
-    }
+  
 
-    //被监听的对象属性
-    @objc dynamic var symbolState:String = ""
     
-    @objc dynamic var chars:String = ""
+
     
-    @objc dynamic var resultFinish:String = ""
-    //声明变量，辨别运算符号和点号之间是否重复点击
-    private var isContinuousOnclickSymbol:Bool = false
-    private var isEqualOnclickSymbol:Bool = false
-    //声明一个装输入数字值的数组
+
+    //声明定义变量:保存数值的空数组
     private var arrNumber:Array<String> = []
-    //声明一个装输入运算符号的数组
+    //声明定义变量:拼接数值
+    @objc dynamic var numberOfChars:String = ""
+    //被监听的对象属性>声明定义变量:拼接数值
+    @objc dynamic var symbolOfCurrentSate:String = ""
+
+    //声明定义变量:保存运算符的空数组
     private var arrSymbol:Array<String> = []
-    //输入的数字
-    private var perfectCharsCount:String = ""
-    
+    //每一步的计算结果
+    @objc dynamic var result:Double = 0
+    //是否重复点击运算符号
+    var isOnclickSymbol:Bool = false
+    //是否重复点击等于号
+    var isOnclickEqual:Bool = false
+    //
+    var isOnclickEqualNoOnclickSymbol:Bool = false
+
     @objc func onclick(btn:UIButton){
+
         let number1:String = "1"
         let number2:String = "2"
         let number3:String = "3"
@@ -174,8 +176,8 @@ class PrefixTool: NSObject {
         let symbolSubtract:String = "➖"
         let symbolMultiply:String = "✖️"
         let symbolDivide:String = "➗"
-        
-        
+
+
         switch btn.tag {
         case 10://我的
             //跳转我的页面
@@ -183,215 +185,231 @@ class PrefixTool: NSObject {
             
         case 11://全删除
             print("全删除按钮")
-            initProperty()
-            
+            initAllProperty()
         case 12://部分删除
             print("部分删除按钮")
             
         case 13://单个删除
             print("单个删除按钮")
+            delegateCharacter()
         case 20://数字1
             print("数字1按钮")
+            getValue(btn: btn, currentValue: number1)
             
-            gethars(number1)
-            getCount(btnTag: btn.tag, symbolName: number1)
         case 21://数字2
             print("数字2按钮")
-            
-            gethars(number2)
-            getCount(btnTag: btn.tag, symbolName: number2)
+            getValue(btn: btn, currentValue: number2)
+
         case 22://数字3
             print("数字3按钮")
-            
-            gethars(number3)
-            getCount(btnTag: btn.tag, symbolName: number3)
+            getValue(btn: btn, currentValue: number3)
             
         case 23://乘
             print("乘号按钮")
+            getValue(btn: btn, currentValue: symbolMultiply)
+        
             
-            symbolState = "multiply"
-            getCount(btnTag: btn.tag, symbolName: "")
-            
-            if chars.isEmpty{
-                replaceChar("0" + symbolMultiply)
-            }else{
-                replaceChar(symbolMultiply)
-            }
             
         case 30://数字4
             print("数字4按钮")
-            gethars(number4)
-            getCount(btnTag: btn.tag, symbolName: number4)
+            getValue(btn: btn, currentValue: number4)
+            
         case 31://数字5
             print("数字5按钮")
-            gethars(number5)
-            getCount(btnTag: btn.tag, symbolName: number5)
+            getValue(btn: btn, currentValue: number5)
+            
         case 32://数字6
             print("数字6按钮")
-            gethars(number6)
-            getCount(btnTag: btn.tag, symbolName: number6)
+            getValue(btn: btn, currentValue: number6)
+            
         case 33://除
-            symbolState = "divide"
-            getCount(btnTag: btn.tag, symbolName: "")
-            if chars.isEmpty{
-                replaceChar("0" + symbolDivide)
-            }else{
-                replaceChar(symbolDivide)
-            }
+            getValue(btn: btn, currentValue: symbolDivide)
             
             print("除号按钮")
         case 40://数字7
             print("数字7按钮")
-            gethars(number7)
-            getCount(btnTag: btn.tag, symbolName: number7)
+            getValue(btn: btn, currentValue: number7)
+            
         case 41://数字8
             print("数字8按钮")
-            gethars(number8)
-            getCount(btnTag: btn.tag, symbolName: number8)
+            getValue(btn: btn, currentValue: number8)
+            
         case 42://数字9
             print("数字9按钮")
-            gethars(number9)
-            getCount(btnTag: btn.tag, symbolName: number9)
+            getValue(btn: btn, currentValue: number9)
+            
         case 43://加
             print("加号按钮")
-            symbolState = "add"
-            getCount(btnTag: btn.tag, symbolName: "")
-            if chars.isEmpty{
-               replaceChar("0" + symbolAdd)
-            }else{
-                replaceChar(symbolAdd)
-            }
+            getValue(btn: btn, currentValue: symbolAdd)
             
             
         case 50://点号
             print("点号按钮")
-            if chars.isEmpty{
-                replaceChar("0" + number100)
-            }else{
-                replaceChar(number100)
-            }
-            getCount(btnTag: btn.tag, symbolName: number100)
+            getValue(btn: btn, currentValue: number100)
+            
         case 51://数字0
             print("数字0按钮")
-            gethars( number0)
-            getCount(btnTag: btn.tag, symbolName: number0)
+            getValue(btn: btn, currentValue: number0)
+            
             
         case 52://等于号
             print("等于号按钮")
-            if isEqualOnclickSymbol == true{
-            getCount(btnTag: btn.tag, symbolName: "")
-            //计算
-            resultOfCount(arrNumber, arrSymbol)
-            //initProperty()
-            }
-            
-            isEqualOnclickSymbol = true
+            getValue(btn: btn, currentValue: "")
             
         case 53://减
             print("减号按钮")
-            symbolState = "subtract"
-            getCount(btnTag: btn.tag, symbolName: "")
-            if chars.isEmpty{
-                replaceChar("0" + symbolSubtract)
-            }else{
-                replaceChar(symbolSubtract)
-            }
+            getValue(btn: btn, currentValue: symbolSubtract)
+            
 
         default:
             break
         }
-      
-
-        if btn.tag == 23 || btn.tag == 33 || btn.tag == 43 || btn.tag == 53{
-            isContinuousOnclickSymbol = true
-        }else{
-            symbolState = ""
-            isContinuousOnclickSymbol = false
-            if btn.tag == 50{
-                isContinuousOnclickSymbol = true
-            }
-        }
-        //
+    
        
     }
     let arrNum:Array<Int> = [20,21,22,30,31,32,40,41,42,50,51]//数字
-    let arrSym:Array<Int> = [23,33,43,53,52]//数字
+    let arrSym:Array<Int> = [23,33,43,53]//运算符号
+    let arrEquar:Array<Int> = [52] //运算符号等于号
 
-    //收集输入的数值
-    private func getCount(btnTag tag:Int,symbolName symbolCount:String){
+    private func getValue(btn:UIButton, currentValue:String){
 
-        if arrNum.contains(tag) {
-            //输入数字前保存上一个运算符号
-            if isContinuousOnclickSymbol == true{
-                arrSymbol.append(symbolState)
+        let btnTag:Int = btn.tag
+        if arrNum.contains(btnTag) {
+            if !symbolOfCurrentSate.isEmpty{
+                //不为空的数值保存
+                arrSymbol.append(symbolOfCurrentSate)
+            }
+           
+            symbolOfCurrentSate = ""
+            if numberOfChars.isEmpty && btnTag == 50{
+                numberOfChars += "0"+currentValue
+            }else{
+                //如果有重复的点不在输入点号
+                if btnTag == 50 && numberOfChars.contains(currentValue){}else{
+                    numberOfChars += currentValue
+                }
             }
             
-            perfectCharsCount += symbolCount
-            
-        }else if arrSym.contains(tag){
-            //输入运算符保存上一个输入的数值
-            if !perfectCharsCount.isEmpty{
-                arrNumber.append(perfectCharsCount)
+            isOnclickSymbol = false
+            isOnclickEqual = false
+        }else if arrSym.contains(btnTag){
+            if !numberOfChars.isEmpty{
+                //不为空的数值保存
+                if numberOfChars.last == "."{
+                    numberOfChars += "0"
+                    arrNumber.append(numberOfChars)
+                }else{
+                    arrNumber.append(numberOfChars)
+                }
             }
-            perfectCharsCount = ""
+
+            if isOnclickSymbol == false &&  isOnclickEqual == false{
+                reckoning()
+            }
+            numberOfChars = ""
+            symbolOfCurrentSate = currentValue
+            isOnclickSymbol = true
+            isOnclickEqual = false
+            isOnclickEqualNoOnclickSymbol = false
+        }else if arrEquar.contains(btnTag){
+             delegate?.changeShowSymbolTextOfOnclickEqual?()
+            
+            
+             if !numberOfChars.isEmpty && isOnclickEqualNoOnclickSymbol == false{
+                //不为空的数值保存
+                if numberOfChars.last == "."{
+                    numberOfChars += "0"
+                    arrNumber.append(numberOfChars)
+                }else{
+                    arrNumber.append(numberOfChars)
+                }
+            }
+            //计算
+            if isOnclickSymbol == false &&  isOnclickEqual == false && isOnclickEqualNoOnclickSymbol == false{
+                reckoning()
+            }else{
+                //您尚未点击运算符号
+                delegate?.tellNew?(str:"您尚未点击运算符号")
+            }
+            //点击等于符号
+            numberOfChars = ""
+            symbolOfCurrentSate = ""
+            isOnclickSymbol = false
+            isOnclickEqual = true
+            isOnclickEqualNoOnclickSymbol = true
         }
+        
+        print("numberOfChars:\(numberOfChars)===symbolOfCurrentSate\(symbolOfCurrentSate)===arrNumber\(arrNumber)===arrSymbol\(arrSymbol)")
+
+        
     }
     
-    //MARK - 避免重复输入运算符号
-    func replaceChar(_ currentChar:String){
-        if isEqualOnclickSymbol == false{
-            if isContinuousOnclickSymbol == true{
-                chars.remove(at: chars.index(before: chars.endIndex))
-                chars = chars + currentChar
-            }else{
-                chars += currentChar
-            }
-        }
-    }
+   
 
-    private func changeOnclickSelecteSate(_ stateStr:String){
-        
+    //选中运算符号做出相应的背景颜色
+    private func changeOnclickSelecteSateForBGColor(_ stateStr:String){
         switch stateStr {
-        case "multiply":
+        case "✖️":
             divideBtn?.isSelected = false
             multiplyBtn?.isSelected = true
             addBtn?.isSelected = false
             subtractBtn?.isSelected = false
 
-        case "divide":
+        case "➗":
             divideBtn?.isSelected = true
             multiplyBtn?.isSelected = false
             addBtn?.isSelected = false
             subtractBtn?.isSelected = false
             
-        case "add":
+        case "➕":
             divideBtn?.isSelected = false
             multiplyBtn?.isSelected = false
             addBtn?.isSelected = true
             subtractBtn?.isSelected = false
-        case "subtract":
+        case "➖":
             divideBtn?.isSelected = false
             multiplyBtn?.isSelected = false
             addBtn?.isSelected = false
             subtractBtn?.isSelected = true
         default:
-            
             divideBtn?.isSelected = false
             multiplyBtn?.isSelected = false
             addBtn?.isSelected = false
             subtractBtn?.isSelected = false
         }
     }
+    //MARK - 计算结果reckoning
+    private func reckoning(){
+        if (arrSymbol.isEmpty && !arrNumber.isEmpty) || (!arrSymbol.isEmpty && !arrNumber.isEmpty && arrNumber.count == 1){
+            result = stringToDouble(arrNumber[0])
+        }else if !arrSymbol.isEmpty && !arrNumber.isEmpty{
+            
+           
+            if arrSymbol.count == arrNumber.count{
+                arrSymbol.removeLast()
+            }
+            
+            result = searchSymbolWay(stateStr: arrSymbol.last ?? ""
+                , num1: result, num2: stringToDouble(arrNumber.last ?? ""))
+         
+            
+        }else if arrSymbol.isEmpty && arrNumber.isEmpty{
+            result = 0
+        }
+        print("result:\(result)")
+    }
+    
     //MARK - 初始化属性值
-    private func initProperty(){
-        symbolState = ""
-        chars = ""
-        resultFinish = ""
-        isContinuousOnclickSymbol = false
-        arrSymbol = []
+    private func initAllProperty(){
+ 
         arrNumber = []
-        isEqualOnclickSymbol = false
-
+        numberOfChars = ""
+        symbolOfCurrentSate = ""
+        arrSymbol = []
+        result = 0
+        isOnclickEqualNoOnclickSymbol = false
+        isOnclickEqual = false
+        isOnclickSymbol = false
     }
     
     //MARK - 运算符号算法
@@ -415,13 +433,13 @@ class PrefixTool: NSObject {
     private func searchSymbolWay(stateStr:String,num1:Double,num2:Double) -> Double{
          
         switch stateStr {
-        case "add":
+        case "➕":
             return add(num1: num1, num2: num2)
-        case "subtract":
+        case "➖":
             return subtract(num1: num1, num2: num2)
-        case "multiply":
+        case "✖️":
             return multiply(num1: num1, num2: num2)
-        case "divide":
+        case "➗":
             return divide(num1: num1, num2: num2)
         default:
             return 0
@@ -430,7 +448,9 @@ class PrefixTool: NSObject {
     
     
     private func delegateCharacter(){//删除单个字符
-        
+        if !numberOfChars.isEmpty{
+            numberOfChars.remove(at: numberOfChars.index(before: numberOfChars.endIndex))
+        }
     }
     private func delegateItem(){//删除单个数
         
@@ -459,23 +479,8 @@ class PrefixTool: NSObject {
         UIGraphicsEndImageContext()
         return image
     }
-     
-    private func resultOfCount(_ arrNumberR:Array<String>, _ arrSymbolR:Array<String>){
-        var currentResut:Double = stringToDouble(arrNumberR[0])
-        
-        var i = 1
-        for symbol in arrSymbolR{
-            if !symbol.isEmpty{
-                currentResut = searchSymbolWay(stateStr: symbol, num1: currentResut, num2: stringToDouble(arrNumberR[i]))
-                i += 1
-            }
-        }
-        resultFinish = doubleToString(currentResut)
-        print("运算结果是：\(currentResut)")
-    }
     
-    
-    deinit {
+     deinit {
         //移除监听
         self.removeObserver(self, forKeyPath: "symbolState")
     }
