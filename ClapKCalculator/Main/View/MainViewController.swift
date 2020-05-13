@@ -87,7 +87,7 @@ class MainViewController: UIViewController, Deleagte {
         let newsText = UILabel.init(frame: CGRect(x: 0, y: -18, width: WIDTH_SCREEN, height: 40))
         newsText.textAlignment = .center
         newsText.textColor = .white
-        newsText.text = "dadadasdad"
+        newsText.text = ""
         newsText.font = UIFont.boldSystemFont(ofSize: 15)
         return newsText
     }()
