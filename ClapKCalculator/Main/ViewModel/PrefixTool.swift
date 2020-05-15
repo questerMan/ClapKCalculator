@@ -60,6 +60,14 @@ class PrefixTool: NSObject {
         self.addObserver(self, forKeyPath: "result", options: [.new,.old], context: nil)
         self.addObserver(self, forKeyPath: "numberOfChars", options: [.new,.old], context: nil)
 
+        let name = Notification.Name(rawValue: "changeBtnColor")
+        NotificationCenter.default.addObserver(self, selector: #selector(change), name: name, object: nil)
+    }
+    @objc func change(sender:Notification){
+        print("接收广播成功")
+        print(sender.name)
+        print(sender.userInfo!)
+        
     }
     /// KVO监听属性
     override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
@@ -81,6 +89,8 @@ class PrefixTool: NSObject {
             delegate?.changeShowCharsText?(textStr: newValue)
         }
     }
+
+    var meBtn:UIButton?
 
     var addBtn:UIButton?
     var subtractBtn:UIButton?
@@ -121,6 +131,8 @@ class PrefixTool: NSObject {
                 superView.view.addSubview(btn)
                 
                 switch btn.tag {
+                case 10:
+                    meBtn = btn
                 case 23:
                     multiplyBtn = btn
                 case 33:
@@ -362,7 +374,7 @@ class PrefixTool: NSObject {
                 reckoning()
             }else{
                 //您尚未点击运算符号
-                delegate?.tellNew?(str:"您尚未点击运算符号")
+                //delegate?.tellNew?(str:"您尚未点击运算符号")
             }
             //点击等于符号
             numberOfChars = ""
@@ -555,6 +567,8 @@ class PrefixTool: NSObject {
      deinit {
         //移除监听
         self.removeObserver(self, forKeyPath: "symbolState")
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name(rawValue: "changeBtnColor"), object: nil)
+
     }
     
 }

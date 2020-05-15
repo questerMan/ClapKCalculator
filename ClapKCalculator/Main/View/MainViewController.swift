@@ -28,6 +28,10 @@ class MainViewController: UIViewController, Deleagte {
         default:
             logoText.textColor = .gray
         }
+        
+        let noT = NSNotification.Name(rawValue: "changeBtnColor")
+                   let dic = ["key":"value"]
+        NotificationCenter.default.post(name: noT, object: nil, userInfo:dic)
     }
     
     func tellResultTextEmpty() {
@@ -153,6 +157,7 @@ class MainViewController: UIViewController, Deleagte {
 
     }
 
+    
     /*
     // MARK: - Navigation
 
