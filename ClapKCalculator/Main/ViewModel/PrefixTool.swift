@@ -12,6 +12,7 @@ let THEME0_BG_COLOR = UIColor(red: 74/255, green: 112/255, blue: 139/255, alpha:
 //135,206,235
 let BTN_TIN_COLOR = UIColor(red: 135/255, green: 206/255, blue: 235/255, alpha: 1)
 
+//logo颜色
 let LOGO_0_COLOR = UIColor(red: 100/255, green: 149/255, blue: 237/255, alpha: 1)//100,149,237
 let LOGO_1_COLOR = UIColor(red: 175/255, green: 238/255, blue: 238/255, alpha: 1)//175,238,238
 let LOGO_2_COLOR = UIColor(red: 0/255, green: 139/255, blue: 139/255, alpha: 1)//0,139,139
