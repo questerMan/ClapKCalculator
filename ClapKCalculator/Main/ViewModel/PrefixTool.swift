@@ -564,6 +564,16 @@ class PrefixTool: NSObject {
         
     }
     
+    public func caretPanGesture(_ vc:UIViewController){
+      //添加手势
+        let panGesture = UIPanGestureRecognizer.init(target: self, action: #selector(pan(_:)))
+        vc.view.addGestureRecognizer(panGesture)
+    }
+    
+    @objc func pan(_ panGesture:UIPanGestureRecognizer){
+
+    }
+    
     
      deinit {
         //移除监听

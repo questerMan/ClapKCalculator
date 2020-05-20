@@ -152,9 +152,7 @@ class MainViewController: UIViewController, Deleagte {
         
         //创建功能键模块
         tool.creatCheckButton(superView: self,topY:HEIGHT_SCREEN/12*5)
-                
         
-
     }
 
     
